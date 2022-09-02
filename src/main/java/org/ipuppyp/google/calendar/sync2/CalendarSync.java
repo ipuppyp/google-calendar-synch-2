@@ -2,6 +2,7 @@ package org.ipuppyp.google.calendar.sync2;
 
 import static java.lang.Boolean.parseBoolean;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.nio.file.attribute.PosixFilePermissions.fromString;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.stream.Collectors.toList;
 
@@ -35,24 +36,30 @@ public class CalendarSync implements HttpFunction {
     private static final String ORIG_I_CAL_UID = "origICalUID";
 
     private static final String APPLICATION_NAME = "ipuppyp/google-calendar-sync";
-    // private static final String DATA_STORE_DIR = "/root/store/";
-    private static final String DATA_STORE_DIR = "/root/store/";
-    private static final String CREDENTIALS = getSecretsDir() + "/google-calendar-synch-credentials.json";
 
     private final CalendarCrudService calendarCrudService;
 
     public CalendarSync() throws IOException {
-        new File(DATA_STORE_DIR).mkdir();
-        LOGGER.info("dir created");
-        Path path = Path.of(DATA_STORE_DIR + "StoredCredential");
-        Files.copy(Path.of("/secrets2/tokens/StoredCredential"), path, REPLACE_EXISTING);
-        LOGGER.info("file copied");
-
-        Set<PosixFilePermission> permissions = PosixFilePermissions.fromString("rw-rw-r--");
-        PosixFileAttributeView posixView = Files.getFileAttributeView(path, PosixFileAttributeView.class);
-        posixView.setPermissions(permissions);
-
-        calendarCrudService = new CalendarCrudService(APPLICATION_NAME, CREDENTIALS, DATA_STORE_DIR);
+        String dataStoreDir;
+        String credentials;
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win")) {
+            String storeDir = System.getProperty("user.home") + "/.store";
+            dataStoreDir = storeDir + "/tokens";
+            credentials = storeDir + "/google-calendar-synch-credentials.json";
+        } else {
+            String storeDir = "/secrets";
+            dataStoreDir = "/root/tokens";
+            credentials = storeDir + "/google-calendar-synch-credentials.json";
+            // original StoredCredential must be copied into a writable file
+            new File(dataStoreDir).mkdir();
+            Path oldPath = Path.of(storeDir + "/tokens/StoredCredential");
+            Path newPath = Path.of(dataStoreDir + "/StoredCredential");
+            Files.copy(oldPath, newPath, REPLACE_EXISTING);
+            Files.getFileAttributeView(newPath, PosixFileAttributeView.class)
+                    .setPermissions(fromString("rw-rw-r--"));
+        }
+        calendarCrudService = new CalendarCrudService(APPLICATION_NAME, credentials, dataStoreDir);
     }
 
     @Override
@@ -126,15 +133,6 @@ public class CalendarSync implements HttpFunction {
 
     }
 
-    private static String getSecretsDir() {
-        String os = System.getProperty("os.name").toLowerCase();
-        if (os.contains("win")) {
-            return System.getProperty("user.home") + "/.store";
-        } else {
-            return "/secrets";
-        }
-
-    }
     private boolean notContains(Collection<Event> events, Event event) {
         return findByICalId(events, event).isEmpty();
     }
