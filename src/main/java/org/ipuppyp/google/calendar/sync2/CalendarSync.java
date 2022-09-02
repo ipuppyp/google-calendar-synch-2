@@ -2,6 +2,7 @@ package org.ipuppyp.google.calendar.sync2;
 
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Boolean.valueOf;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.stream.Collectors.toList;
 
@@ -17,9 +18,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.*;
+import java.nio.file.attribute.*;
 import java.util.*;
 import java.util.regex.Pattern;
+
 
 
 public class CalendarSync implements HttpFunction {
@@ -31,8 +36,10 @@ public class CalendarSync implements HttpFunction {
     private static final String ORIG_I_CAL_UID = "origICalUID";
 
     private static final String APPLICATION_NAME = "ipuppyp/google-calendar-sync";
-    private static final String DATA_STORE_DIR = getSecretsDir() + "/google-calendar-synch.tokens";
+    //private static final String DATA_STORE_DIR = "/secrets2/tokens/StoredCredential";
+    private static final String DATA_STORE_DIR = "/root/store/";
     private static final String CREDENTIALS = getSecretsDir() + "/google-calendar-synch-credentials.json";
+
 
     @Override
     public void service(HttpRequest request, HttpResponse response) throws IOException {
@@ -40,7 +47,22 @@ public class CalendarSync implements HttpFunction {
         doSync(request, response);
 
     }
+
     private void doSync(HttpRequest request, HttpResponse response) throws IOException {
+        new File(DATA_STORE_DIR).mkdir();
+        LOGGER.info("dir created");
+        Path path = Path.of(DATA_STORE_DIR + "StoredCredential");
+        Files.copy(Path.of("/secrets2/tokens/StoredCredential"), path, REPLACE_EXISTING);
+        LOGGER.info("file copied");
+        long bytes = Files.size(path);
+        LOGGER.info(String.format("%,d bytes", bytes));
+
+        main();
+        String rwxFormPermissions = "rw-rw-rw-";
+        Set<PosixFilePermission> permissions = PosixFilePermissions.fromString(rwxFormPermissions);
+        PosixFileAttributeView posixView = Files.getFileAttributeView(path, PosixFileAttributeView.class);
+        posixView.setPermissions(permissions);
+        main();
 
         BufferedWriter writer = response.getWriter();
 
@@ -172,5 +194,43 @@ public class CalendarSync implements HttpFunction {
 
     }
 
+    void main() throws IOException {
+        Path path = Path.of(DATA_STORE_DIR + "StoredCredential");
+        //Files.copy(Path.of("c:\\test\\1.txt"), path, REPLACE_EXISTING);
 
+        BasicFileAttributeView view
+                = Files.getFileAttributeView(
+                path, BasicFileAttributeView.class);
+
+        // method to read the file attributes.
+        BasicFileAttributes attribute = view.readAttributes();
+
+        // method to check the creation time of the file.
+        System.out.print("Creation Time of the file: ");
+        System.out.println(attribute.creationTime());
+        System.out.print(
+                "Last Accessed Time of the file: ");
+        System.out.println(attribute.lastAccessTime());
+
+        // method to check the last
+        // modified time for the file
+        System.out.print(
+                "Last Modified Time for the file: ");
+        System.out.println(attribute.lastModifiedTime());
+
+        // method to access the check whether
+        // the file is a directory or not.
+        System.out.println("Directory or not: "
+                + attribute.isDirectory());
+
+        // method to access the size of the file in KB.
+        System.out.println("Size of the file: "
+                + attribute.size());
+
+        Set<PosixFilePermission> filePerm = Files.getPosixFilePermissions(path);
+        String permission = PosixFilePermissions.toString(filePerm);
+
+        System.out.println(permission);
+
+    }
 }

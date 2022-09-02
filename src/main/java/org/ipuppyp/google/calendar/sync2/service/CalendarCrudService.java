@@ -4,12 +4,19 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributeView;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.security.GeneralSecurityException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
+import com.google.api.client.util.store.DataStoreFactory;
+import com.google.api.client.util.store.MemoryDataStoreFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +49,7 @@ public class CalendarCrudService {
 			Collections.singletonList(CalendarScopes.CALENDAR_READONLY);
 
 	public CalendarCrudService(String applicationName, String credentials, String dataStoreDir) {
+		LOGGER.info("Data store dir: {}", dataStoreDir);
 		init(applicationName, credentials, dataStoreDir);
 	}
 
@@ -49,9 +57,9 @@ public class CalendarCrudService {
 		HttpTransport httpTransport;
 		try {
 			httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-			FileDataStoreFactory dataStoreFactory = new FileDataStoreFactory(new File(dataStoreDir));
 
-			Credential credential = authorize(credentials, httpTransport, dataStoreFactory);
+
+			Credential credential = authorize(credentials, httpTransport, dataStoreDir);
 
 			client = new com.google.api.services.calendar.Calendar.Builder(httpTransport, JSON_FACTORY, credential)
 					.setApplicationName(applicationName).build();
@@ -61,21 +69,26 @@ public class CalendarCrudService {
 
 	}
 
-	private Credential authorize(String credentials, HttpTransport httpTransport, FileDataStoreFactory dataStoreFactory) {
+	private Credential authorize(String credentials, HttpTransport httpTransport, String dataStoreDir) throws IOException {
 
+		File dataDirectory = new File(dataStoreDir);
+		LOGGER.info("Data dataDirectory: {}", dataDirectory);
+
+		DataStoreFactory dataStoreFactory = new FileDataStoreFactory(dataDirectory);
 
 		GoogleClientSecrets clientSecrets;
 		try {
-
 
 			clientSecrets = GoogleClientSecrets.load(JSON_FACTORY,
 					new InputStreamReader(new FileInputStream(credentials)));
 			GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(httpTransport, JSON_FACTORY,
 					clientSecrets, SCOPES).setDataStoreFactory(dataStoreFactory)
+							.setRefreshListeners(Set.of())
 							.build();
 			Credential credential = new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver())
 					.authorize("user");
 			return credential;
+
 		} catch (IOException e) {
 			throw new ApiCallException(e);
 		}
@@ -160,5 +173,7 @@ public class CalendarCrudService {
 			throw new ApiCallException(e);
 		}
 	}
+
+
 
 }
