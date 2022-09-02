@@ -1,7 +1,6 @@
 package org.ipuppyp.google.calendar.sync2;
 
 import static java.lang.Boolean.parseBoolean;
-import static java.lang.Boolean.valueOf;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.stream.Collectors.toList;
@@ -36,34 +35,28 @@ public class CalendarSync implements HttpFunction {
     private static final String ORIG_I_CAL_UID = "origICalUID";
 
     private static final String APPLICATION_NAME = "ipuppyp/google-calendar-sync";
-    //private static final String DATA_STORE_DIR = "/secrets2/tokens/StoredCredential";
+    // private static final String DATA_STORE_DIR = "/root/store/";
     private static final String DATA_STORE_DIR = "/root/store/";
     private static final String CREDENTIALS = getSecretsDir() + "/google-calendar-synch-credentials.json";
 
+    private final CalendarCrudService calendarCrudService;
 
-    @Override
-    public void service(HttpRequest request, HttpResponse response) throws IOException {
-
-        doSync(request, response);
-
-    }
-
-    private void doSync(HttpRequest request, HttpResponse response) throws IOException {
+    public CalendarSync() throws IOException {
         new File(DATA_STORE_DIR).mkdir();
         LOGGER.info("dir created");
         Path path = Path.of(DATA_STORE_DIR + "StoredCredential");
         Files.copy(Path.of("/secrets2/tokens/StoredCredential"), path, REPLACE_EXISTING);
         LOGGER.info("file copied");
-        long bytes = Files.size(path);
-        LOGGER.info(String.format("%,d bytes", bytes));
 
-        main();
-        String rwxFormPermissions = "rw-rw-rw-";
-        Set<PosixFilePermission> permissions = PosixFilePermissions.fromString(rwxFormPermissions);
+        Set<PosixFilePermission> permissions = PosixFilePermissions.fromString("rw-rw-r--");
         PosixFileAttributeView posixView = Files.getFileAttributeView(path, PosixFileAttributeView.class);
         posixView.setPermissions(permissions);
-        main();
 
+        calendarCrudService = new CalendarCrudService(APPLICATION_NAME, CREDENTIALS, DATA_STORE_DIR);
+    }
+
+    @Override
+    public void service(HttpRequest request, HttpResponse response) throws IOException {
         BufferedWriter writer = response.getWriter();
 
         LOGGER.info("*********************************");
@@ -103,7 +96,6 @@ public class CalendarSync implements HttpFunction {
         LOGGER.info("* publicOnly = {}\t*", publicOnly);
         LOGGER.info("*********************************");
 
-        CalendarCrudService calendarCrudService = new CalendarCrudService(APPLICATION_NAME, CREDENTIALS, DATA_STORE_DIR);
 
         Calendar source = calendarCrudService.findCalendarByName(sourceCalendar);
         Calendar target = calendarCrudService.findCalendarByName(targetCalendar);
@@ -119,17 +111,17 @@ public class CalendarSync implements HttpFunction {
                 .collect(toList());
 
         List<Event> newEvents = eventsInSource.stream().filter(event -> notContains(eventsInTarget, event)).collect(toList());
-        List<Event> deletedEvents = eventsInTarget.stream().filter(event -> notContains(eventsInSource, event)).collect(toList());
+        List<Event> removedEvents = eventsInTarget.stream().filter(event -> notContains(eventsInSource, event)).collect(toList());
         List<Event> changedEvents = eventsInSource.stream().filter(event -> changed(eventsInTarget, event)).collect(toList());
 
         LOGGER.info("*********************************");
         LOGGER.info("* Events to add = {}\t\t*", newEvents.size());
-        LOGGER.info("* Events to delete = {}\t\t*", deletedEvents.size());
+        LOGGER.info("* Events to remove = {}\t\t*", removedEvents.size());
         LOGGER.info("* Events to update = {}\t\t*", changedEvents.size());
         LOGGER.info("*********************************");
 
         calendarCrudService.addEvents(target, newEvents);
-        calendarCrudService.removeEvents(target, deletedEvents);
+        calendarCrudService.removeEvents(target, removedEvents);
         calendarCrudService.updateEvents(target, changedEvents);
 
     }
@@ -191,46 +183,6 @@ public class CalendarSync implements HttpFunction {
             throw new IllegalArgumentException("Missing configuration: " + name);
         }
         return property.get();
-
-    }
-
-    void main() throws IOException {
-        Path path = Path.of(DATA_STORE_DIR + "StoredCredential");
-        //Files.copy(Path.of("c:\\test\\1.txt"), path, REPLACE_EXISTING);
-
-        BasicFileAttributeView view
-                = Files.getFileAttributeView(
-                path, BasicFileAttributeView.class);
-
-        // method to read the file attributes.
-        BasicFileAttributes attribute = view.readAttributes();
-
-        // method to check the creation time of the file.
-        System.out.print("Creation Time of the file: ");
-        System.out.println(attribute.creationTime());
-        System.out.print(
-                "Last Accessed Time of the file: ");
-        System.out.println(attribute.lastAccessTime());
-
-        // method to check the last
-        // modified time for the file
-        System.out.print(
-                "Last Modified Time for the file: ");
-        System.out.println(attribute.lastModifiedTime());
-
-        // method to access the check whether
-        // the file is a directory or not.
-        System.out.println("Directory or not: "
-                + attribute.isDirectory());
-
-        // method to access the size of the file in KB.
-        System.out.println("Size of the file: "
-                + attribute.size());
-
-        Set<PosixFilePermission> filePerm = Files.getPosixFilePermissions(path);
-        String permission = PosixFilePermissions.toString(filePerm);
-
-        System.out.println(permission);
 
     }
 }

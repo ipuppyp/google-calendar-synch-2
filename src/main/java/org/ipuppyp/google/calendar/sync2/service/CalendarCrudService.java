@@ -49,7 +49,6 @@ public class CalendarCrudService {
 			Collections.singletonList(CalendarScopes.CALENDAR_READONLY);
 
 	public CalendarCrudService(String applicationName, String credentials, String dataStoreDir) {
-		LOGGER.info("Data store dir: {}", dataStoreDir);
 		init(applicationName, credentials, dataStoreDir);
 	}
 
@@ -57,8 +56,6 @@ public class CalendarCrudService {
 		HttpTransport httpTransport;
 		try {
 			httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-
-
 			Credential credential = authorize(credentials, httpTransport, dataStoreDir);
 
 			client = new com.google.api.services.calendar.Calendar.Builder(httpTransport, JSON_FACTORY, credential)
@@ -70,10 +67,7 @@ public class CalendarCrudService {
 	}
 
 	private Credential authorize(String credentials, HttpTransport httpTransport, String dataStoreDir) throws IOException {
-
 		File dataDirectory = new File(dataStoreDir);
-		LOGGER.info("Data dataDirectory: {}", dataDirectory);
-
 		DataStoreFactory dataStoreFactory = new FileDataStoreFactory(dataDirectory);
 
 		GoogleClientSecrets clientSecrets;
