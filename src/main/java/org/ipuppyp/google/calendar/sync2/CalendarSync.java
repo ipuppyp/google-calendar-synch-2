@@ -32,11 +32,8 @@ public class CalendarSync implements HttpFunction {
     private static final Logger LOGGER = LoggerFactory.getLogger(CalendarSync.class);
 
     private static final String PRIVATE = "private";
-
     private static final String ORIG_I_CAL_UID = "origICalUID";
-
     private static final String APPLICATION_NAME = "ipuppyp/google-calendar-sync";
-
     private final CalendarCrudService calendarCrudService;
 
     public CalendarSync() throws IOException {
@@ -87,12 +84,12 @@ public class CalendarSync implements HttpFunction {
 
     private void sync(HttpRequest request) {
 
-        String sourceCalendar = getProperty(request, "sourceCalendar");
-        String targetCalendar = getProperty(request, "targetCalendar");
-        String eventPrefix = getProperty(request, "eventPrefix");
-        String eventFilter = getProperty(request, "eventFilter");
+        String sourceCalendar = getRequestParam(request, "sourceCalendar");
+        String targetCalendar = getRequestParam(request, "targetCalendar");
+        String eventPrefix = getRequestParam(request, "eventPrefix");
+        String eventFilter = getRequestParam(request, "eventFilter");
         Pattern eventFilterPattern = Pattern.compile(eventFilter, CASE_INSENSITIVE);
-        boolean publicOnly = parseBoolean(getProperty(request, "publicOnly"));
+        boolean publicOnly = parseBoolean(getRequestParam(request, "publicOnly"));
 
         LOGGER.info("*********************************");
         LOGGER.info("* PARAMS:\t\t\t*");
@@ -174,7 +171,7 @@ public class CalendarSync implements HttpFunction {
 
     }
 
-    private String getProperty(HttpRequest request, String name) {
+    private String getRequestParam(HttpRequest request, String name) {
         Optional<String> property = request.getFirstQueryParameter(name);
         if (property.isEmpty()) {
             LOGGER.error("Missing configuration: \"{}\", please set it with a request parameter -D\n", name);
