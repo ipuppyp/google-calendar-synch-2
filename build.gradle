@@ -19,7 +19,6 @@ dependencies {
   implementation 'com.google.api-client:google-api-client:2.0.0'
   implementation 'com.google.oauth-client:google-oauth-client-jetty:1.34.1'
 
-  //compile 'org.slf4j:slf4j-api:1.7.33'
   compile 'ch.qos.logback:logback-classic:1.2.11'
   compile 'ch.qos.logback:logback-core:1.2.11'
 
@@ -42,5 +41,14 @@ tasks.register("runFunction", JavaExec) {
   )
   doFirst {
     args('--classpath', files(configurations.runtimeClasspath, sourceSets.main.output).asPath)
+  }
+}
+
+task deployFunction {
+  doFirst {
+    exec {
+      workingDir '.'
+      commandLine 'cmd',  '/c', 'gcloud functions deploy calendarSync --entry-point org.ipuppyp.google.calendar.sync2.CalendarSync --runtime java11 --trigger-http --memory 512MB --update-secrets=/secrets/google-calendar-synch-credentials.json=projects/842556296685/secrets/google-calendar-synch-credentials:latest,/secrets/tokens/StoredCredential=projects/842556296685/secrets/StoredCredential:latest -q'
+    }
   }
 }

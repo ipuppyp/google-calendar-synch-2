@@ -1,1 +1,0 @@
-gradle runFunction -Prun.functionTarget=org.ipuppyp.google.calendar.sync2.CalendarSync
