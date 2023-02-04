@@ -4,19 +4,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributeView;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.security.GeneralSecurityException;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import com.google.api.client.util.store.DataStoreFactory;
-import com.google.api.client.util.store.MemoryDataStoreFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +37,7 @@ public class CalendarCrudService {
 	private com.google.api.services.calendar.Calendar client;
 
 	private static final List<String> SCOPES =
-			Collections.singletonList(CalendarScopes.CALENDAR_READONLY);
+			Collections.singletonList(CalendarScopes.CALENDAR);
 
 	public CalendarCrudService(String applicationName, String credentials, String dataStoreDir) {
 		init(applicationName, credentials, dataStoreDir);

@@ -42,7 +42,7 @@ public class CalendarSync implements HttpFunction {
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
             String storeDir = System.getProperty("user.home") + "/.store";
-            dataStoreDir = storeDir + "/tokens";
+            dataStoreDir = storeDir + "/google-calendar-synch.tokens/tokens";
             credentials = storeDir + "/google-calendar-synch-credentials.json";
         } else {
             String storeDir = "/secrets";
@@ -107,8 +107,7 @@ public class CalendarSync implements HttpFunction {
         List<Event> eventsInSource = calendarCrudService.findEventsByCalendar(source).getItems().stream()
                 .filter(event -> !(publicOnly && PRIVATE.equals(event.getVisibility())))
                 .filter(event -> !eventFilterPattern.matcher(event.getSummary()).find())
-                .map(event -> event.setVisibility(null))
-                .map(event -> setIds(event, eventPrefix))
+                .map(event -> prepareToSave(event, eventPrefix))
                 .collect(toList());
         List<Event> eventsInTarget = calendarCrudService.findEventsByCalendar(target).getItems().stream()
                 .filter(event -> !"cancelled".equals(event.getStatus()) && event.getSummary().contains(eventPrefix))
@@ -155,11 +154,12 @@ public class CalendarSync implements HttpFunction {
     private boolean equals(Event event, Event origEvent) {
         return Objects.equals(origEvent.getSummary(), event.getSummary()) &&
                 Objects.equals(origEvent.getStart(), event.getStart()) &&
+                Objects.equals(origEvent.getEnd(), event.getEnd()) &&
                 Objects.equals(origEvent.getDescription(), event.getDescription()) &&
-                Objects.equals(origEvent.getEnd(), event.getEnd());
+                Objects.equals(origEvent.getLocation(), event.getLocation());
     }
 
-    private Event setIds(Event event, String eventPrefix) {
+    private Event prepareToSave(Event event, String eventPrefix) {
         Map<String, String> shared = new HashMap<>();
         shared.put(ORIG_I_CAL_UID, event.getICalUID());
         return event
@@ -167,14 +167,16 @@ public class CalendarSync implements HttpFunction {
                 .setDescription("see details in original event")
                 .setId(null)
                 .setExtendedProperties(new ExtendedProperties().setShared(shared))
-                .setICalUID(null);
+                .setICalUID(null)
+                .setVisibility(null)
+                .setAttendees(List.of());
 
     }
 
     private String getRequestParam(HttpRequest request, String name) {
         Optional<String> property = request.getFirstQueryParameter(name);
         if (property.isEmpty()) {
-            LOGGER.error("Missing configuration: \"{}\", please set it with a request parameter -D\n", name);
+            LOGGER.error("Missing configuration: \"{}\", please set it with a request parameter.\n", name);
             throw new IllegalArgumentException("Missing configuration: " + name);
         }
         return property.get();
