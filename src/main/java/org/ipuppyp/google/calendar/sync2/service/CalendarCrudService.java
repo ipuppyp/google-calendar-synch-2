@@ -127,17 +127,28 @@ public class CalendarCrudService {
 
 	}
 
-	public Events findEventsByCalendar(Calendar calendar) {
+	public List<Event> findEventsByCalendar(Calendar calendar) {
 		try {
-
+			List<Event> result = new ArrayList<>();
 			LOGGER.debug("Loading events for calendar {}...", calendar.getSummary());
-			Events events = client.events().list(calendar.getId())
-					.setMaxResults(100)
-					.setShowHiddenInvitations(true)
-					//.setSingleEvents(true)
-					.setTimeMin(new DateTime(new Date())).execute();
-			LOGGER.debug("{} Events found.", events.getItems().size());
-			return events;
+			Events events = null;
+			int counter = 0;
+			while (events == null || events.getNextPageToken() != null) {
+				LOGGER.debug("Loading page {} of {}...", counter++, calendar.getSummary());
+				if (events == null) {
+					events = client.events().list(calendar.getId())
+							.setMaxResults(100)
+							.setShowHiddenInvitations(true)
+							//.setSingleEvents(true)
+							.setTimeMin(new DateTime(new Date())).execute();
+				} else {
+					events = client.events().list(calendar.getId())
+							.setPageToken(events.getNextPageToken()).execute();
+				}
+				result.addAll(events.getItems());
+			}
+			LOGGER.debug("{} Events found.", result.size());
+			return result;
 		} catch (IOException e) {
 			throw new ApiCallException(e);
 		}

@@ -104,12 +104,12 @@ public class CalendarSync implements HttpFunction {
         Calendar source = calendarCrudService.findCalendarByName(sourceCalendar);
         Calendar target = calendarCrudService.findCalendarByName(targetCalendar);
 
-        List<Event> eventsInSource = calendarCrudService.findEventsByCalendar(source).getItems().stream()
+        List<Event> eventsInSource = calendarCrudService.findEventsByCalendar(source).stream()
                 .filter(event -> !(publicOnly && PRIVATE.equals(event.getVisibility())))
                 .filter(event -> !eventFilterPattern.matcher(event.getSummary()).find())
                 .map(event -> prepareToSave(event, eventPrefix))
                 .collect(toList());
-        List<Event> eventsInTarget = calendarCrudService.findEventsByCalendar(target).getItems().stream()
+        List<Event> eventsInTarget = calendarCrudService.findEventsByCalendar(target).stream()
                 .filter(event -> !"cancelled".equals(event.getStatus()) && event.getSummary().contains(eventPrefix))
                 .collect(toList());
 
