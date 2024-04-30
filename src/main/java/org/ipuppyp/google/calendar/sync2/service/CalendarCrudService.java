@@ -70,9 +70,8 @@ public class CalendarCrudService {
 					clientSecrets, SCOPES).setDataStoreFactory(dataStoreFactory)
 							.setRefreshListeners(Set.of())
 							.build();
-			Credential credential = new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver())
+			return new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver())
 					.authorize("user");
-			return credential;
 
 		} catch (IOException e) {
 			throw new ApiCallException(e);
