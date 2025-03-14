@@ -16,7 +16,7 @@ jobs:
       - name: Auth Google     
         uses: google-github-actions/auth@v2
         with:
-          credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
+          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
 
       - name: Setup Java
         uses: actions/setup-java@v4
