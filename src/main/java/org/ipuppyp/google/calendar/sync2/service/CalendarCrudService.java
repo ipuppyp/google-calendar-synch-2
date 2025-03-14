@@ -1,16 +1,5 @@
 package org.ipuppyp.google.calendar.sync2.service;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.security.GeneralSecurityException;
-import java.util.*;
-
-import com.google.api.client.util.store.DataStoreFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -21,17 +10,24 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.DateTime;
+import com.google.api.client.util.store.DataStoreFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.Calendar;
-import com.google.api.services.calendar.model.CalendarList;
-import com.google.api.services.calendar.model.CalendarListEntry;
-import com.google.api.services.calendar.model.Event;
-import com.google.api.services.calendar.model.Events;
+import com.google.api.services.calendar.model.*;
+import lombok.extern.slf4j.Slf4j;
+import org.ipuppyp.google.calendar.sync2.model.exception.ApiCallException;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.security.GeneralSecurityException;
+import java.util.*;
+
+@Slf4j
 public class CalendarCrudService {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(CalendarCrudService.class);
 	private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
 	private com.google.api.services.calendar.Calendar client;
@@ -81,9 +77,9 @@ public class CalendarCrudService {
 	public void addEvent(Calendar calendar, Event event) {
 		try {
 
-			LOGGER.debug("Add event {}, {} to calendar {}...", event.getSummary(), event.getStart().getDateTime(), calendar.getSummary());
+			log.debug("Add event {}, {} to calendar {}...", event.getSummary(), event.getStart().getDateTime(), calendar.getSummary());
 			client.events().insert(calendar.getId(), event).execute();
-			LOGGER.debug("Event added.");
+			log.debug("Event added.");
 
 		} catch (IOException e) {
 			throw new ApiCallException(e);
@@ -97,9 +93,9 @@ public class CalendarCrudService {
 
 	public void updateEvent(Calendar calendar, Event event) {
 		try {
-			LOGGER.debug("Update event {}, {} in calendar {}...", event.getSummary(), event.getStart().getDateTime(), calendar.getSummary());
+			log.debug("Update event {}, {} in calendar {}...", event.getSummary(), event.getStart().getDateTime(), calendar.getSummary());
 			client.events().update(calendar.getId(), event.getId(), event).execute();
-			LOGGER.debug("Event updated.");
+			log.debug("Event updated.");
 
 		} catch (IOException e) {
 			throw new ApiCallException(e);
@@ -113,9 +109,9 @@ public class CalendarCrudService {
 
 	public void removeEvent(Calendar calendar, Event event) {
 		try {
-			LOGGER.debug("Remove event: {}, {} from calendar {}...", event.getSummary(), event.getStart().getDateTime(), calendar.getSummary());
+			log.debug("Remove event: {}, {} from calendar {}...", event.getSummary(), event.getStart().getDateTime(), calendar.getSummary());
 			client.events().delete(calendar.getId(), event.getId()).execute();
-			LOGGER.debug("Event removed.");
+			log.debug("Event removed.");
 		} catch (IOException e) {
 			throw new ApiCallException(e);
 		}
@@ -129,11 +125,11 @@ public class CalendarCrudService {
 	public List<Event> findEventsByCalendar(Calendar calendar) {
 		try {
 			List<Event> result = new ArrayList<>();
-			LOGGER.debug("Loading events for calendar {}...", calendar.getSummary());
+			log.debug("Loading events for calendar {}...", calendar.getSummary());
 			Events events = null;
 			int counter = 0;
 			while (events == null || events.getNextPageToken() != null) {
-				LOGGER.debug("Loading page {} of {}...", counter++, calendar.getSummary());
+				log.debug("Loading page {} of {}...", counter++, calendar.getSummary());
 				if (events == null) {
 					events = client.events().list(calendar.getId())
 							.setMaxResults(100)
@@ -146,7 +142,7 @@ public class CalendarCrudService {
 				}
 				result.addAll(events.getItems());
 			}
-			LOGGER.debug("{} Events found.", result.size());
+			log.debug("{} Events found.", result.size());
 			return result;
 		} catch (IOException e) {
 			throw new ApiCallException(e);
@@ -156,13 +152,13 @@ public class CalendarCrudService {
 	public Calendar findCalendarByName(String name) {
 		try {
 
-			LOGGER.debug("Finding calendar by name {}...", name);
+			log.debug("Finding calendar by name {}...", name);
 			CalendarList calendarList = client.calendarList().list().execute();
 			CalendarListEntry result = calendarList.getItems().stream().filter(cal -> cal.getSummary().equals(name))
-					.findFirst().get();
+					.findFirst().orElseThrow();
 			Calendar calendar = new Calendar().setId(result.getId()).setSummary(result.getSummary());
 
-			LOGGER.debug("Calendar found: {}", calendar);
+			log.debug("Calendar found: {}", calendar);
 			return calendar;
 		} catch (IOException e) {
 			throw new ApiCallException(e);

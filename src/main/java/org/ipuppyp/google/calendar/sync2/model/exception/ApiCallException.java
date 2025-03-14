@@ -1,4 +1,4 @@
-package org.ipuppyp.google.calendar.sync2.service;
+package org.ipuppyp.google.calendar.sync2.model.exception;
 
 public class ApiCallException extends RuntimeException {
 
