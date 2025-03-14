@@ -1,4 +1,4 @@
-name: Deploy Cloud Function
+name: deploy
 on:
   workflow_dispatch:
 
@@ -27,5 +27,5 @@ jobs:
       - name: Change wrapper permissions
         run: chmod +x ./gradlew
       
-      - name: Build with Gradle
+      - name: Build and deploy with Gradle
         run: ./gradlew build deployFunction
