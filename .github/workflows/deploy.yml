@@ -12,6 +12,18 @@ jobs:
     steps:
       - name: Checkout sources    
         uses: actions/checkout@v4
+    
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Change wrapper permissions
+        run: chmod +x ./gradlew
+      
+      - name: Build
+        run: ./gradlew build
 
       - name: Auth Google     
         uses: google-github-actions/auth@v2
@@ -25,15 +37,6 @@ jobs:
 
       - name: 'Use gcloud CLI'
         run: 'gcloud info'
-      
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
 
-      - name: Change wrapper permissions
-        run: chmod +x ./gradlew
-      
-      - name: Build and deploy with Gradle
-        run: ./gradlew build deployFunction
+      - name: Deploy
+        run: gcloud functions deploy calendarSync --entry-point org.ipuppyp.google.calendar.sync2.function.CalendarSyncFunction --runtime java21 --trigger-http --memory 512MB --update-secrets=/secrets/google-calendar-synch-credentials.json=projects/842556296685/secrets/google-calendar-synch-credentials:latest,/secrets/tokens/StoredCredential=projects/842556296685/secrets/StoredCredential:latest -q
