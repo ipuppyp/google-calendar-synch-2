@@ -13,18 +13,6 @@ jobs:
       - name: Checkout sources    
         uses: actions/checkout@v4
     
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-
-      - name: Change wrapper permissions
-        run: chmod +x ./gradlew
-      
-      - name: Build
-        run: ./gradlew build
-
       - name: Auth Google     
         uses: google-github-actions/auth@v2
         with:
@@ -33,7 +21,7 @@ jobs:
       - name: Set up Cloud SDK
         uses: 'google-github-actions/setup-gcloud@v2'
         with:
-          version: '>= 363.0.0'
+          version: '>= 400.0.0'
 
       - name: 'Use gcloud CLI'
         run: 'gcloud info'
