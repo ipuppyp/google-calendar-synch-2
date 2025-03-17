@@ -92,9 +92,9 @@ public class CalendarSyncFunctionService {
                 .filter(event -> !"cancelled".equals(event.getStatus()) && event.getSummary().contains(request.getEventPrefix()))
                 .collect(toList());
 
-        List<Event> newEvents = eventsInSource.stream().filter(event -> notContains(eventsInTarget, event)).collect(toList());
-        List<Event> removedEvents = eventsInTarget.stream().filter(event -> notContains(eventsInSource, event)).collect(toList());
-        List<Event> changedEvents = eventsInSource.stream().filter(event -> changed(eventsInTarget, event)).collect(toList());
+        List<Event> newEvents = eventsInSource.stream().filter(event -> notContains(eventsInTarget, event)).toList();
+        List<Event> removedEvents = eventsInTarget.stream().filter(event -> notContains(eventsInSource, event)).toList();
+        List<Event> changedEvents = eventsInSource.stream().filter(event -> changed(eventsInTarget, event)).toList();
 
         log.info("*********************************");
         log.info("* Events to add = {}\t\t*", newEvents.size());
