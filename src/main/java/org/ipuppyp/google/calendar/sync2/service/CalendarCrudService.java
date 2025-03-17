@@ -132,10 +132,9 @@ public class CalendarCrudService {
 				log.debug("Loading page {} of {}...", counter++, calendar.getSummary());
 				if (events == null) {
 					events = client.events().list(calendar.getId())
-							.setMaxResults(100)
+							.setMaxResults(1000)
 							.setShowHiddenInvitations(true)
-							//.setSingleEvents(true)
-							.setTimeMin(new DateTime(new Date())).execute();
+							.setTimeMin(new DateTime(System.currentTimeMillis())).execute();
 				} else {
 					events = client.events().list(calendar.getId())
 							.setPageToken(events.getNextPageToken()).execute();
