@@ -56,7 +56,7 @@ tasks.register('deployFunction') {
   doFirst {
     exec {
       workingDir '.'
-      commandLine 'cmd', '/c', 'gcloud functions deploy calendarSync --entry-point org.ipuppyp.google.calendar.sync2.function.CalendarSyncFunction --runtime java21 --trigger-http --memory 512MB --update-secrets=/secrets/google-calendar-synch-credentials.json=projects/842556296685/secrets/google-calendar-synch-credentials:latest,/secrets/tokens/StoredCredential=projects/842556296685/secrets/StoredCredential:latest -q'
+      commandLine 'gcloud functions deploy calendarSync --entry-point org.ipuppyp.google.calendar.sync2.function.CalendarSyncFunction --runtime java21 --trigger-http --memory 512MB --update-secrets=/secrets/google-calendar-synch-credentials.json=projects/842556296685/secrets/google-calendar-synch-credentials:latest,/secrets/tokens/StoredCredential=projects/842556296685/secrets/StoredCredential:latest -q'
     }
   }
 }
