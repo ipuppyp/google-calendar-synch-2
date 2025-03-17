@@ -12,16 +12,16 @@ jobs:
     steps:
       - name: Checkout sources    
         uses: actions/checkout@v4
-    
-      - name: Auth Google     
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
 
       - name: Set up Cloud SDK
         uses: 'google-github-actions/setup-gcloud@v2'
         with:
           version: '400.0.0'
+          
+      - name: Auth Google     
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
 
       - name: 'Use gcloud CLI'
         run: 'gcloud info'
