@@ -17,6 +17,9 @@ jobs:
         uses: 'google-github-actions/setup-gcloud@v2'
         with:
           version: '400.0.0'
+
+      - name: Set Python version
+        run: export CLOUDSDK_PYTHON="/opt/homebrew/bin/python3.11"        
           
       - name: Auth Google     
         uses: google-github-actions/auth@v2
