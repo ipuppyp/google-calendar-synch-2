@@ -28,8 +28,8 @@ dependencies {
   implementation 'ch.qos.logback:logback-classic:1.5.18'
   implementation 'ch.qos.logback:logback-core:1.5.18'
 
-  compileOnly 'org.projectlombok:lombok:1.18.36'
-  annotationProcessor 'org.projectlombok:lombok:1.18.36'
+  compileOnly 'org.projectlombok:lombok:1.18.38'
+  annotationProcessor 'org.projectlombok:lombok:1.18.38'
 
   // These dependencies are only used by the tests.
   testImplementation 'junit:junit:4.13.2'
