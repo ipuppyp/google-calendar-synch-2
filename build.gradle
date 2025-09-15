@@ -33,7 +33,7 @@ dependencies {
 
   // These dependencies are only used by the tests.
   testImplementation 'junit:junit:4.13.2'
-  testImplementation 'com.google.truth:truth:1.4.4'
+  testImplementation 'com.google.truth:truth:1.4.5'
 
 
 }
